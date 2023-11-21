@@ -1,50 +1,61 @@
 import java.lang.reflect.Method
+import kotlin.reflect.KFunction
+import kotlin.reflect.full.declaredMemberFunctions
 
 
-    interface TestRunner {
-        fun runTest(steps: MyTestSteps, test: () -> Unit)
+interface TestRunner<T> {
+    // Объявление интерфейса TestRunner с использованием дженерика T
+    fun runTest(steps: T, test: () -> Unit)
+}
+
+class MyTestSteps {
+    // Класс MyTestSteps с методами before и after
+    fun after() {
+       "After method is executed".log()
     }
-
-    class MyTestSteps {
-        fun after() {
-            println("After method is executed")
-        }
-        fun before() {
-            println("Before method is executed")
-        }
+    fun before() {
+        "Before method is executed".log()
     }
+}
 
-    class MyTestRunner : TestRunner {
-        override fun runTest(steps: MyTestSteps, test: () -> Unit) {
+// функция расширения для String с именем .log приименяется см выше
+fun String.log() {
+    println("-> $this running...")
+}
 
-            val listBefore = mutableListOf<Method>()
-            val listAfter = mutableListOf<Method>()
-            steps::class.java.declaredMethods.forEach {
-                if (it.name.startsWith("before")) {
-                    listBefore.add(it)
-                }
-                else if (it.name.startsWith("after")) {
-                    listAfter.add(it)
-                }
+class MyTestRunner : TestRunner<MyTestSteps> { // Объявляем класс MyTestRunner, который реализует интерфейс TestRunner с параметром типа MyTestSteps
+    override fun runTest(steps: MyTestSteps, test: () -> Unit) { // Переопределяем метод runTest с параметрами steps типа MyTestSteps и test типа функции без параметров и возвращаемого значения
+        val listBefore = mutableListOf<KFunction<*>>() // Создаем изменяемый список listBefore, содержащий элементы типа KFunction
+        val listAfter = mutableListOf<KFunction<*>>() // Создаем изменяемый список listAfter, содержащий элементы типа KFunction
+
+        steps::class.declaredMemberFunctions.forEach { // Для каждого объявленного метода в классе steps
+            if (it.name.startsWith("before")) { // Если имя метода начинается с "before"
+                listBefore.add(it) // Добавляем метод в список listBefore
             }
-            for (method in listBefore) {
-                method.invoke(steps)
-            }
-
-            test()
-
-            for (method in listAfter) {
-
-                method.invoke(steps)
+            else if (it.name.startsWith("after")) { // Иначе, если имя метода начинается с "after"
+                listAfter.add(it) // Добавляем метод в список listAfter
             }
         }
-    }
 
+        for (method in listBefore) { // Для каждого метода в списке listBefore
+            method.call(steps) // Вызываем метод, передавая ему steps в качестве аргумента
+        }
 
-    fun main() {
-        val runner = MyTestRunner()
-        runner.runTest(MyTestSteps()) {
-            println("someTest")
+        test() // Вызываем функцию test
+
+        for (method in listAfter) { // Для каждого метода в списке listAfter
+            method.call(steps) // Вызываем метод, передавая ему steps в качестве аргумента
         }
     }
+}
+
+fun main() {
+    val runner = MyTestRunner()
+    // Создание объекта runner класса MyTestRunner
+
+    runner.runTest(MyTestSteps()) {
+        println("someTest")
+    }
+    // Вызов метода runTest с объектом MyTestSteps и лямбда-выражением для тестирования
+}
 
