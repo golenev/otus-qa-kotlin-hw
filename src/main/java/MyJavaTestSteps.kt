@@ -1,9 +1,10 @@
 class MyJavaTestSteps {
     // Класс MyTestSteps с методами before и after
-    public void after() {
-        System.out.println("Метод after выполняется");
+    fun after() {
+        println("Метод after выполняется")
     }
-    public void before() {
-        System.out.println("Метод before выполняется");
+
+    fun before() {
+        println("Метод before выполняется")
     }
 }

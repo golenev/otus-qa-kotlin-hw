@@ -1,6 +1,7 @@
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.InvocationTargetException
 
 // Объявление интерфейса TestRunner с использованием обобщений T
-public interface ITestRunnerJava<T>{
-    void runTest(T steps, Runnable test) throws InvocationTargetException, IllegalAccessException;
+interface ITestRunnerJava<T> {
+    @Throws(InvocationTargetException::class, IllegalAccessException::class)
+    fun runTest(steps: T, test: Runnable)
 }
